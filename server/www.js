@@ -5,20 +5,22 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const multer = require('multer'); // File handler
-const formidable = require('formidable');
+// const formidable = require('formidable');
 const fs = require('fs');
 const getFile = require('./ast/getFiles');
 const glob = require('glob');
+
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// const corsOptions = {
-//   origin: '*',
-//   optionsSuccessStatus: 200,
-// };
+
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200,
+};
 
 app.use(cors());
 
@@ -27,16 +29,11 @@ const storage = multer.diskStorage({
     cb(null, 'uploads')
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now())
+    cb(null, file.originalname);
   }
 });
 
-// filename: function (req, file, cb) {
-//   cb(null, Date.now() + '-' +file.originalname )
-// }
-
-// let upload = multer({ storage: storage }).single('file');
-const upload = multer({storage});
+let upload = multer({ storage: storage }).single('file');
 
 /*app.post('/api/upload', upload.single('test'), (req, res, next) => {
   /!*const file = req.file;
@@ -46,26 +43,27 @@ const upload = multer({storage});
   console.log('ran');
 });*/
 
-app.post('/api/upload', (req, res) => {
-  new formidable.IncomingForm().parse(req, (err, fields, files) => {
-    if (err) console.log(err);
-    console.log(files);
-    const filePath = path.join(__dirname, 'uploads');
-    fs.writeFileSync()
-  })
-})
-
-// app.post('/upload',function(req, res) {
-//   upload(req, res, function (err) {
-//          if (err instanceof multer.MulterError) {
-//              return res.status(500).json(err)
-//          } else if (err) {
-//              return res.status(500).json(err)
-//          }
-//     return res.status(200).send(req.file)
-//
+// app.post('/api/upload', (req, res) => {
+//   new formidable.IncomingForm().parse(req, (err, fields, files) => {
+//     console.log(files)
+//     if (err) console.log(err);
+//     const filePath = path.join(__dirname, 'uploads');
+//     // fs.writeFileSync()
 //   })
-// });
+
+// })
+
+app.post('/api/upload',function(req, res) {
+  upload(req, res, function (err) {
+         if (err instanceof multer.MulterError) {
+             return res.status(500).json(err)
+         } else if (err) {
+             return res.status(502).json(err)
+         }
+    return res.status(200).send(req.file)
+
+  })
+});
 // });
 
 app.get('/', (req, res) => {
